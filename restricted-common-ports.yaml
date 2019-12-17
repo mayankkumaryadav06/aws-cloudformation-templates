@@ -1,0 +1,24 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Will check if no security group in account is opening some common blocked ports to the world'
+Resources:
+  ConfigRule:
+    Type: 'AWS::Config::ConfigRule'
+    Properties:
+      ConfigRuleName: restricted-common-ports
+      Description: >-
+        A Config rule that checks whether security groups in use do not allow
+        restricted incoming TCP traffic to the specified ports. This rule
+        applies only to IPv4.
+      Scope:
+        ComplianceResourceTypes:
+          - 'AWS::EC2::SecurityGroup'
+      InputParameters:
+        blockedPort1: '22'
+        blockedPort2: '23'
+        blockedPort3: '3390'
+        blockedPort4: '3306'
+        blockedPort5: '4433'
+      Source:
+        Owner: AWS
+        SourceIdentifier: RESTRICTED_INCOMING_TRAFFIC
+
