@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+Resources:
+  ConfigRule:
+    Type: 'AWS::Config::ConfigRule'
+    Properties:
+      ConfigRuleName: vpc-default-security-group-closed
+      Description: >-
+        A config rule that checks that the default security group of any Amazon
+        Virtual Private Cloud (VPC) does not allow inbound or outbound traffic.
+        The rule returns NOT_APPLICABLE if the security group is not default.
+        The rule is NON_COMPLIANT if the defau...
+      Scope:
+        ComplianceResourceTypes:
+          - 'AWS::EC2::SecurityGroup'
+      Source:
+        Owner: AWS
+        SourceIdentifier: VPC_DEFAULT_SECURITY_GROUP_CLOSED
+Parameters: {}
+Metadata: {}
+Conditions: {}
