@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+Resources:
+  BucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: asdasdd
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Principal:
+              AWS: '*'
+            Action:
+              - 's3:PutObject'
+              - 's3:PutObjectAcl'
+            Resource:
+              - 'arn:aws:s3:::asdasdd/*'
+            Effect: Deny
+            Condition:
+              StringEquals:
+                's3:x-amz-acl':
+                  - public-read
+                  - public-read-write
+                  - authenticated-read
+          - Principal:
+              AWS: '*'
+            Action:
+              - 's3:PutObject'
+              - 's3:PutObjectAcl'
+            Resource:
+              - 'arn:aws:s3:::asdasdd/*'
+            Effect: Deny
+            Condition:
+              StringLike:
+                's3:x-amz-grant-read':
+                  - '*http://acs.amazonaws.com/groups/global/AllUsers*'
+                  - '*http://acs.amazonaws.com/groups/global/AuthenticatedUsers*'
+          - Principal:
+              AWS: '*'
+            Action:
+              - 's3:PutBucketAcl'
+            Resource:
+              - 'arn:aws:s3:::asdasdd'
+            Effect: Deny
+            Condition:
+              StringEquals:
+                's3:x-amz-acl':
+                  - public-read
+                  - public-read-write
+                  - authenticated-read
+          - Principal:
+              AWS: '*'
+            Action:
+              - 's3:PutBucketAcl'
+            Resource:
+              - 'arn:aws:s3:::asdasdd'
+            Effect: Deny
+            Condition:
+              StringLike:
+                's3:x-amz-grant-read':
+                  - '*http://acs.amazonaws.com/groups/global/AllUsers*'
+                  - '*http://acs.amazonaws.com/groups/global/AuthenticatedUsers*'
+Parameters: {}
+Metadata: {}
+Conditions: {}
