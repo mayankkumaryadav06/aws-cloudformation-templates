@@ -1,0 +1,11 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+Resources:
+  GuardDuty:
+    Type: 'AWS::GuardDuty::Detector'
+    Properties:
+      Enable: true
+      FindingPublishingFrequency: FIFTEEN_MINUTES
+Parameters: {}
+Metadata: {}
+Conditions: {}
