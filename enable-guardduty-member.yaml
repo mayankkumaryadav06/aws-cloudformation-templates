@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+Resources:
+  GuardDuty:
+    Type: 'AWS::GuardDuty::Detector'
+    Properties:
+      Enable: true
+      FindingPublishingFrequency: FIFTEEN_MINUTES
+  GuardDutyMember1:
+    Type: 'AWS::GuardDuty::Member'
+    Properties:
+      Status: Invited
+      MemberId: asdasd
+      Email: asdasdsd
+      DetectorId:
+        Ref: GuardDuty
+Parameters: {}
+Metadata: {}
+Conditions: {}
