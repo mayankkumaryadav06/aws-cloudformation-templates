@@ -1,0 +1,78 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+Resources:
+  CustomConfigRule:
+    Type: 'AWS::Config::ConfigRule'
+    Properties:
+      ConfigRuleName: guardduty_untreated_findings
+      Description: >-
+        A config rule that checks whether GuardDuty has untreated findings. The
+        rule is NON_COMPLIANT if the GuardDuty has untreated finding older than
+        X days.
+      Scope:
+        ComplianceResourceTypes:
+          - 'AWS::::Account'
+      InputParameters:
+        daysLowSev: '30'
+        daysMediumSev: '7'
+        daysHighSev: '1'
+      Source:
+        Owner: CUSTOM_LAMBDA
+        SourceIdentifier:
+          'Fn::GetAtt':
+            - LambdaFunction
+            - Arn
+        SourceDetails:
+          - EventSource: aws.config
+            MessageType: ScheduledNotification
+            MaximumExecutionFrequency: TwentyFour_Hours
+    DependsOn: LambdaInvokePermissions
+  LambdaInvokePermissions:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      FunctionName:
+        'Fn::GetAtt':
+          - LambdaFunction
+          - Arn
+      Action: 'lambda:InvokeFunction'
+      Principal: config.amazonaws.com
+  LambdaFunction:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: LambdaForguardduty_untreated_findings
+      Handler: index.lambda_handler
+      Role:
+        'Fn::GetAtt':
+          - LambdaIamRole
+          - Arn
+      Runtime: python3.6
+      Code:
+        S3Bucket:
+          'Fn::Sub':
+            - 'cf-aux-${Region}'
+            - Region:
+                Ref: 'AWS::Region'
+        S3Key: GUARDDUTY_UNTREATED_FINDINGS.zip
+      Timeout: 300
+    DependsOn: LambdaIamRole
+  LambdaIamRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AmazonGuardDutyReadOnlyAccess'
+        - 'arn:aws:iam::aws:policy/service-role/AWSConfigRulesExecutionRole'
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      Policies: []
+      RoleName: IAMRoleForguardduty_untreated_findingsDrf
+Parameters: {}
+Metadata: {}
+Conditions: {}
