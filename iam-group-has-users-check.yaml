@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+Resources:
+  ConfigRule:
+    Type: 'AWS::Config::ConfigRule'
+    Properties:
+      ConfigRuleName: iam-group-has-users-check
+      Description: A Config rule that checks whether IAM groups have at least one IAM user.
+      Scope:
+        ComplianceResourceTypes:
+          - 'AWS::IAM::Group'
+      Source:
+        Owner: AWS
+        SourceIdentifier: IAM_GROUP_HAS_USERS_CHECK
+Parameters: {}
+Metadata: {}
+Conditions: {}
