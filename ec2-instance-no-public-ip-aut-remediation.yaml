@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+Resources:
+  ConfigRule:
+    Type: 'AWS::Config::ConfigRule'
+    Properties:
+      ConfigRuleName: ec2-instance-no-public-ip
+      Description: >-
+        A Config rule that checks whether Amazon Elastic Compute Cloud (Amazon
+        EC2) instances have a public IP association. The rule is NON_COMPLIANT
+        if the publicIp field is present in the Amazon EC2 instance
+        configuration item. This rule applies only to IPv4
+      Scope:
+        ComplianceResourceTypes:
+          - 'AWS::EC2::Instance'
+      Source:
+        Owner: AWS
+        SourceIdentifier: EC2_INSTANCE_NO_PUBLIC_IP
+  RemediationForConfigRule:
+    Type: 'AWS::Config::RemediationConfiguration'
+    Properties:
+      Automatic: true
+      ConfigRuleName:
+        Ref: ConfigRule
+      MaximumAutomaticAttempts: 5
+      RetryAttemptSeconds: 60
+      TargetId: AWS-StopEC2Instance
+      TargetType: SSM_DOCUMENT
+      TargetVersion: '1'
+      Parameters:
+        AutomationAssumeRole:
+          StaticValue:
+            Values:
+              - 'Fn::GetAtt':
+                  - AutoRemediationIamRole
+                  - Arn
+        InstanceId:
+          ResourceValue:
+            Value: RESOURCE_ID
+  AutoRemediationIamRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+                - events.amazonaws.com
+                - ssm.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole'
+      Policies: []
+  AutomationPassRolePolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: passAutomationRole
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'iam:PassRole'
+            Resource:
+              'Fn::GetAtt':
+                - AutoRemediationIamRole
+                - Arn
+      Roles:
+        - Ref: AutoRemediationIamRole
+Parameters: {}
+Metadata: {}
+Conditions: {}
