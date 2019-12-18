@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+Resources:
+  ConfigRule:
+    Type: 'AWS::Config::ConfigRule'
+    Properties:
+      ConfigRuleName: root-account-mfa-enabled
+      Description: >-
+        A Config rule that checks whether users of your AWS account require a
+        multi-factor authentication (MFA) device to sign in with root
+        credentials.
+      Scope:
+        ComplianceResourceTypes: []
+      Source:
+        Owner: AWS
+        SourceIdentifier: ROOT_ACCOUNT_MFA_ENABLED
+      MaximumExecutionFrequency: TwentyFour_Hours
+Parameters: {}
+Metadata: {}
+Conditions: {}
