@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+Resources:
+  SnsTopic:
+    Type: 'AWS::SNS::Topic'
+    Properties:
+      Subscription:
+        - Endpoint: email@example.com
+          Protocol: email
+      TopicName: alarm-action
+  CloudWatchAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: cwalarm_vpntrafficout
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers when the traffic outgoing over a
+        managed AWS VPN tunnel hits a certain threshold (Default: Less than
+        1,000,000 bytes in 15 minutes).
+      MetricName: TunnelDataOut
+      Namespace: AWS/VPN
+      Statistic: Sum
+      Period: '900'
+      EvaluationPeriods: '1'
+      Threshold: '1000000'
+      ComparisonOperator: LessThanOrEqualToThreshold
+      AlarmActions:
+        - Ref: SnsTopic
+      Dimensions:
+        - Name: VpnId
+          Value: ''
+Parameters: {}
+Metadata: {}
+Conditions: {}

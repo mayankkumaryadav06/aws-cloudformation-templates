@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+Resources:
+  SnsTopic:
+    Type: 'AWS::SNS::Topic'
+    Properties:
+      Subscription:
+        - Endpoint: email@example.com
+          Protocol: email
+      TopicName: alarm-action
+  CloudWatchAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: unauthorized_api_calls
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers if Multiple unauthorized actions or
+        logins attempted.
+      MetricName: UnauthorizedAttemptCount
+      Namespace: CloudTrailMetrics
+      Statistic: Sum
+      Period: '60'
+      EvaluationPeriods: '1'
+      Threshold: '1'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      AlarmActions:
+        - Ref: SnsTopic
+      TreatMissingData: notBreaching
+  MetricFilter:
+    Type: 'AWS::Logs::MetricFilter'
+    Properties:
+      LogGroupName: cloudtrail_log_group_name
+      FilterPattern: >-
+        { ($.errorCode = "*UnauthorizedOperation") || ($.errorCode =
+        "AccessDenied*") }
+      MetricTransformations:
+        - MetricValue: '1'
+          MetricNamespace: CloudTrailMetrics
+          MetricName: UnauthorizedAttemptCount
+Parameters: {}
+Metadata: {}
+Conditions: {}

@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+Resources:
+  SnsTopic:
+    Type: 'AWS::SNS::Topic'
+    Properties:
+      Subscription:
+        - Endpoint: email@example.com
+          Protocol: email
+      TopicName: alarm-action
+  CloudWatchAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: cwalarm_rejected_ssh
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers when there are rejected SSH connections
+        in a VPC (Default: 10 connections per hour). Requires VPC flow logs to
+        be enabled.
+      MetricName: RejectedSSHCount
+      Namespace: VPCFlowLogsMetrics
+      Statistic: Sum
+      Period: '3600'
+      EvaluationPeriods: '1'
+      Threshold: '10'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      AlarmActions:
+        - Ref: SnsTopic
+      TreatMissingData: notBreaching
+  MetricFilter:
+    Type: 'AWS::Logs::MetricFilter'
+    Properties:
+      LogGroupName: vpc_cw_log_group
+      FilterPattern: >-
+        [version, account, eni, source, destination, srcport, destport="22",
+        protocol="6", packets, bytes, windowstart, windowend, action="REJECT",
+        flowlogstatus]
+      MetricTransformations:
+        - MetricValue: '1'
+          MetricNamespace: VPCFlowLogsMetrics
+          MetricName: RejectedSSHCount
+Parameters: {}
+Metadata: {}
+Conditions: {}

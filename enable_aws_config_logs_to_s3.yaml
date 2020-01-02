@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+Resources:
+  ConfigurationRecorder:
+    Type: 'AWS::Config::ConfigurationRecorder'
+    Properties:
+      RoleARN:
+        'Fn::GetAtt':
+          - IamRoleForAwsConfig
+          - Arn
+      RecordingGroup:
+        AllSupported: true
+        IncludeGlobalResourceTypes: true
+  DeliveryChannel:
+    Type: 'AWS::Config::DeliveryChannel'
+    Properties:
+      S3BucketName:
+        Ref: S3BucketForAwsConfig
+  S3BucketForAwsConfig:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: bucket_name
+  IamRoleForAwsConfig:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSConfigRole'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service: config.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: allow-access-to-config-s3-bucket
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:PutObject'
+                Resource:
+                  - 'Fn::Join':
+                      - ''
+                      - - 'Fn::GetAtt':
+                            - S3BucketForAwsConfig
+                            - Arn
+                        - /*
+                Condition:
+                  StringLike:
+                    's3:x-amz-acl': bucket-owner-full-control
+              - Effect: Allow
+                Action:
+                  - 's3:GetBucketAcl'
+                Resource:
+                  'Fn::GetAtt':
+                    - S3BucketForAwsConfig
+                    - Arn
+      RoleName: iam_role
+Parameters: {}
+Metadata: {}
+Conditions: {}

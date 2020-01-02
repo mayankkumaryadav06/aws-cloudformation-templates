@@ -9,7 +9,7 @@ Resources:
         A Config rule that checks whether Amazon GuardDuty is enabled in your
         AWS account and region. If you provide an AWS account for
         centralization, the rule evaluates the Amazon GuardDuty results in the
-        centralized account. 
+        centralized account. The rule is compliant when Amazo...
       Scope:
         ComplianceResourceTypes: []
       InputParameters:

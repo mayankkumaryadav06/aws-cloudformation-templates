@@ -1,0 +1,168 @@
+#Enables AWS CloudTrail, AWS Config, and Amazon GuardDuty
+#CloudTrail Trail applid to all regions and Log File Integrity Validation is enabled
+#S3 Bucket for CloudTrail logs and Config Logs: Server Side Encryption, Server Access Logging, and Block Public Access
+#CloudTrail configured to forward events to a CloudWatch Log Group, with 90 days retention period
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+Resources:
+  S3SharedBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      LoggingConfiguration: {}
+      AccessControl: LogDeliveryWrite
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+  BucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket:
+        Ref: S3SharedBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Principal:
+              Service:
+                - cloudtrail.amazonaws.com
+                - config.amazonaws.com
+            Action:
+              - 's3:GetBucketAcl'
+            Resource:
+              - 'Fn::GetAtt':
+                  - S3SharedBucket
+                  - Arn
+            Effect: Allow
+            Condition: {}
+          - Principal:
+              Service:
+                - cloudtrail.amazonaws.com
+                - config.amazonaws.com
+            Action:
+              - 's3:PutObject'
+            Resource:
+              - 'Fn::Join':
+                  - ''
+                  - - ''
+                    - 'Fn::GetAtt':
+                        - S3SharedBucket
+                        - Arn
+                    - /*
+            Effect: Allow
+            Condition:
+              StringEquals:
+                's3:x-amz-acl': bucket-owner-full-control
+    DependsOn: S3SharedBucket
+  CloudTrail:
+    Type: 'AWS::CloudTrail::Trail'
+    Properties:
+      TrailName: ManagementEventsTrail
+      IsLogging: true
+      EnableLogFileValidation: true
+      EventSelectors:
+        - IncludeManagementEvents: true
+          ReadWriteType: All
+      IsMultiRegionTrail: true
+      IncludeGlobalServiceEvents: true
+      S3BucketName:
+        Ref: S3SharedBucket
+      CloudWatchLogsLogGroupArn:
+        'Fn::GetAtt':
+          - CWLogGroupForCloudTrail
+          - Arn
+      CloudWatchLogsRoleArn:
+        'Fn::GetAtt':
+          - IamRoleForCwLogs
+          - Arn
+    DependsOn:
+      - BucketPolicy
+  IamRoleForCwLogs:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service: cloudtrail.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: allow-access-to-cw-logs
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+  CWLogGroupForCloudTrail:
+    Type: 'AWS::Logs::LogGroup'
+    Properties:
+      LogGroupName: CloudTrailLogs
+      RetentionInDays: 90
+  ConfigurationRecorder:
+    Type: 'AWS::Config::ConfigurationRecorder'
+    Properties:
+      RoleARN:
+        'Fn::GetAtt':
+          - IamRoleForAwsConfig
+          - Arn
+      RecordingGroup:
+        AllSupported: true
+        IncludeGlobalResourceTypes: true
+  DeliveryChannel:
+    Type: 'AWS::Config::DeliveryChannel'
+    Properties:
+      S3BucketName:
+        Ref: S3SharedBucket
+  IamRoleForAwsConfig:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSConfigRole'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service: config.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: allow-access-to-config-s3-bucket
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:PutObject'
+                Resource:
+                  - 'Fn::Join':
+                      - ''
+                      - - 'Fn::GetAtt':
+                            - S3SharedBucket
+                            - Arn
+                        - /*
+                Condition:
+                  StringLike:
+                    's3:x-amz-acl': bucket-owner-full-control
+              - Effect: Allow
+                Action:
+                  - 's3:GetBucketAcl'
+                Resource:
+                  'Fn::GetAtt':
+                    - S3SharedBucket
+                    - Arn
+      RoleName: iamRoleForAWSConfig
+  GuardDuty:
+    Type: 'AWS::GuardDuty::Detector'
+    Properties:
+      Enable: true
+Parameters: {}
+Metadata: {}
+Conditions: {}

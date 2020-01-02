@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+Resources:
+  SnsTopic:
+    Type: 'AWS::SNS::Topic'
+    Properties:
+      Subscription:
+        - Endpoint: email@example.com
+          Protocol: email
+      TopicName: alarm-action
+  CloudWatchAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: disabled_deleted_cmks
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers if customer created CMKs get disabled
+        or scheduled for deletion.
+      MetricName: KMSCustomerKeyDeletion
+      Namespace: CloudTrailMetrics
+      Statistic: Sum
+      Period: '60'
+      EvaluationPeriods: '1'
+      Threshold: '1'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      AlarmActions:
+        - Ref: SnsTopic
+      TreatMissingData: notBreaching
+  MetricFilter:
+    Type: 'AWS::Logs::MetricFilter'
+    Properties:
+      LogGroupName: cloudtrail_log_group
+      FilterPattern: >-
+        { ($.eventSource = kms.amazonaws.com) &&  (($.eventName=DisableKey) ||
+        ($.eventName=ScheduleKeyDeletion)) }
+      MetricTransformations:
+        - MetricValue: '1'
+          MetricNamespace: CloudTrailMetrics
+          MetricName: KMSCustomerKeyDeletion
+Parameters: {}
+Metadata: {}
+Conditions: {}

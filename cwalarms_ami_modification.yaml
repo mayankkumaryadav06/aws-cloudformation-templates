@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+Resources:
+  SnsTopic:
+    Type: 'AWS::SNS::Topic'
+    Properties:
+      Subscription:
+        - Endpoint: email@example.com
+          Protocol: email
+      TopicName: alarm-action
+  CloudWatchAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: ami_modification
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers when existing AMIs (Amazon Machine
+        Images) are modified, deleted, copied or shared with other AWS accounts.
+      MetricName: AmiModificationEventCount
+      Namespace: CloudTrailMetrics
+      Statistic: Sum
+      Period: '300'
+      EvaluationPeriods: '1'
+      Threshold: '1'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      AlarmActions:
+        - Ref: SnsTopic
+      TreatMissingData: notBreaching
+  MetricFilter:
+    Type: 'AWS::Logs::MetricFilter'
+    Properties:
+      LogGroupName: cloudtrail_log_group
+      FilterPattern: >-
+        { ($.eventName = DeregisterImage) || ($.eventName = CopyImage) ||
+        ($.eventName = ModifyImageAttribute) }
+      MetricTransformations:
+        - MetricValue: '1'
+          MetricNamespace: CloudTrailMetrics
+          MetricName: AmiModificationEventCount
+Parameters: {}
+Metadata: {}
+Conditions: {}

@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+Resources:
+  BucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: asdasd
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Principal: '*'
+            Action: 's3:*'
+            Resource:
+              - 'arn:aws:s3:::asdasd/*'
+            Effect: Allow
+            Condition:
+              IpAddress:
+                'aws:SourceIp': 192.168.1.0/24
+Parameters: {}
+Metadata: {}
+Conditions: {}

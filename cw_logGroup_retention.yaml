@@ -1,0 +1,11 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+Resources:
+  CloudWatchLogGroup:
+    Type: 'AWS::Logs::LogGroup'
+    Properties:
+      LogGroupName: cloudwatch_logGroup
+      RetentionInDays: 30
+Parameters: {}
+Metadata: {}
+Conditions: {}

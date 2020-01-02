@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+Resources:
+  FlowLogs:
+    Type: 'AWS::EC2::FlowLog'
+    Properties:
+      ResourceType: VPC
+      ResourceId: vpc_resource_id
+      TrafficType: ALL
+      LogDestinationType: s3
+      LogDestination:
+        'Fn::GetAtt':
+          - S3BucketForFlowLogs
+          - Arn
+  S3BucketForFlowLogs:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: bucket_name
+Parameters: {}
+Metadata: {}
+Conditions: {}

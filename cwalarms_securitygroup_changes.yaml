@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+Resources:
+  SnsTopic:
+    Type: 'AWS::SNS::Topic'
+    Properties:
+      Subscription:
+        - Endpoint: email@example.com
+          Protocol: email
+      TopicName: alarm-action
+  CloudWatchAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: securitygroup_changes
+      AlarmDescription: >-
+        A CloudWatch Alarm that triggers when changes are made to Security
+        Groups.
+      MetricName: SecurityGroupEventCount
+      Namespace: CloudTrailMetrics
+      Statistic: Sum
+      Period: '300'
+      EvaluationPeriods: '1'
+      Threshold: '1'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      AlarmActions:
+        - Ref: SnsTopic
+      TreatMissingData: notBreaching
+  MetricFilter:
+    Type: 'AWS::Logs::MetricFilter'
+    Properties:
+      LogGroupName: cloudtrail_log_group
+      FilterPattern: >-
+        { ($.eventName = AuthorizeSecurityGroupIngress) || ($.eventName =
+        AuthorizeSecurityGroupEgress) || ($.eventName =
+        RevokeSecurityGroupIngress) || ($.eventName = RevokeSecurityGroupEgress)
+        || ($.eventName = CreateSecurityGroup) || ($.eventName =
+        DeleteSecurityGroup) }
+      MetricTransformations:
+        - MetricValue: '1'
+          MetricNamespace: CloudTrailMetrics
+          MetricName: SecurityGroupEventCount
+Parameters: {}
+Metadata: {}
+Conditions: {}

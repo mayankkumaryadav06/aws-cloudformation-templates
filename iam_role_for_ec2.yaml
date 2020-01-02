@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+Resources:
+  IamRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore'
+        - 'arn:aws:iam::aws:policy/AmazonSSMDirectoryServiceAccess'
+        - 'arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy'
+      Policies:
+        - PolicyName: AllowAccessToS3
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:GetObject'
+                  - 's3:PutObject'
+                  - 's3:PutObjectAcl'
+                Resource: 'arn:aws:s3:::*bucket_name/*'
+        - PolicyName: AllowAccessToVpcEndpoints
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:GetObject'
+                Resource:
+                  - 'arn:aws:s3:::aws-ssm-eu-west-2/*'
+                  - 'arn:aws:s3:::aws-windows-downloads-eu-west-2/*'
+                  - 'arn:aws:s3:::amazon-ssm-eu-west-2/*'
+                  - 'arn:aws:s3:::amazon-ssm-packages-eu-west-2/*'
+                  - 'arn:aws:s3:::eu-west-2-birdwatcher-prod/*'
+                  - 'arn:aws:s3:::patch-baseline-snapshot-eu-west-2/*'
+      RoleName: Ec2RoleForSSM
+      Description: EC2 IAM role for SSM access
+  Ec2InstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      InstanceProfileName: Ec2RoleForSSM
+      Roles:
+        - Ref: IamRole
+Parameters: {}
+Metadata: {}
+Conditions: {}
